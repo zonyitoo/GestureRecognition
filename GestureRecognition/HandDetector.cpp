@@ -25,9 +25,9 @@ using namespace cv;
 
 bool HandDetector::grab(VideoCapture & capture) {
     return capture.grab()
-        && capture.retrieve(depthDisparityImage, CAP_OPENNI_DISPARITY_MAP)
-        && capture.retrieve(bgrImage, CAP_OPENNI_BGR_IMAGE)
-        && capture.retrieve(validDepthMask, CAP_OPENNI_VALID_DEPTH_MASK);
+        && capture.retrieve(depthDisparityImage, CV_CAP_OPENNI_DISPARITY_MAP)
+        && capture.retrieve(bgrImage, CV_CAP_OPENNI_BGR_IMAGE)
+        && capture.retrieve(validDepthMask, CV_CAP_OPENNI_VALID_DEPTH_MASK);
 }
 
 void HandDetector::getHSVMask(Mat & hsvMask) const {

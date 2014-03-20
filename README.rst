@@ -1,32 +1,38 @@
------------------------
-基于 Kinect 的手势识别程序
------------------------
+-------------------------------
+Gesture Recognition with Kinect
+-------------------------------
 
-苦逼的毕设 😂
+*Just For GRADUATION.*
 
 Requirements
 ============
 
-* Unix/Linux, Windows
+* Unix/Linux, Microsoft Windows®
 
-* OpenNI, OpenNI2 (由于 OpenNI2 在 Unix/Linux 环境下对 Kinect 支持不完善，建议在 Windows 下配合 Microsoft Kinect SDK 使用）
+* OpenNI 1.x, OpenNI 2.x (Currently OpenNI 2.x only support Windows® Kinect SDK)
 
-* OpenCV
+* OpenCV >= 2.4.7
 
-* Kinect
+* Microsoft® Kinect
 
 Building
 ========
 
-* OS X 下打开 `GestureRecognition.xcodeproj`，设置好 OpenCV 的库路径，直接运行即可
+* OS X 下打开 ``GestureRecognition.xcodeproj``，设置好 OpenCV 的库路径，直接运行即可
 
-* Linux 
+* Linux/Unix
 
-.. code: bash
+.. code:: bash
 
     $ g++ *.h *.cpp -o gesture-recognition `pkg-config opencv --libs --cflags`
-    
+    $ ./gesture-recognition
+
 ScreenShots
 ===========
 
-*在初版完成后上传*
+*Will be uploaded after first BETA*
+
+Thanks
+======
+
+* Directed by `Assiciate Prof. Qingge Ji <http://sist.sysu.edu.cn/main/default/teainfo.aspx?id=73&no=1&pId=10>`_
