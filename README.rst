@@ -10,10 +10,10 @@ Aims
 .. role:: strike
     :class: strike
 
-* :strike:`Skin detection.`
-* :strike:`Obtain one hand's contour.`
-* :strike:`Distinguish hand from head.`
-* :strike:`Mark finger tips and palm's positions.`
+* Skin detection. ✔︎
+* Obtain one hand's contour. ✔︎
+* Distinguish hand from head. ✔︎
+* Mark finger tips and palm's positions. ✔︎
 * Follow finger tips and palm's positions change.
 * Use finite-state machine to define and recognize hand gesture.
 * Improve precision of finger tips and palm's positions.
