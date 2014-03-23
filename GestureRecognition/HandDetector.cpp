@@ -7,6 +7,7 @@
 //
 
 #include "HandDetector.h"
+#include "utils.h"
 
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -43,7 +44,7 @@ void HandDetector::getHSVMask(Mat & hsvMask) const {
     bitwise_or(hsvMask1, hsvMask2, hsvMask);
     
     // Filtering
-    Mat structuringElem = getStructuringElement(MORPH_RECT, Size(3, 3));
+    Mat structuringElem = getStructuringElement(MORPH_RECT, Size(5, 5));
     erode(hsvMask, hsvMask, structuringElem);
     morphologyEx(hsvMask, hsvMask, MORPH_OPEN, structuringElem);
     dilate(hsvMask, hsvMask, structuringElem);
@@ -57,12 +58,15 @@ void HandDetector::getFilteredDepthMap(Mat &maskedMap) const {
     getHSVMask(hsvMask);
     depthDisparityImage.copyTo(filteredDepthMap, hsvMask);
     
+    imshow("DEPTH", filteredDepthMap);
+    
     Mat structuringElem = getStructuringElement(MORPH_RECT, Size(3, 3));
     erode(filteredDepthMap, filteredDepthMap, structuringElem);
     morphologyEx(filteredDepthMap, filteredDepthMap, MORPH_OPEN, structuringElem);
     dilate(filteredDepthMap, filteredDepthMap, structuringElem);
     morphologyEx(filteredDepthMap, filteredDepthMap, MORPH_CLOSE, structuringElem);
     
+    //GaussianBlur(filteredDepthMap, filteredDepthMap, Size(3, 3), 1);
     medianBlur(filteredDepthMap, filteredDepthMap, 3);
     
     Mat depthMapMask;
@@ -71,7 +75,7 @@ void HandDetector::getFilteredDepthMap(Mat &maskedMap) const {
     filteredDepthMap.copyTo(maskedMap, depthMapMask);
 }
 
-vector<Point> HandDetector::getHandContour() const {
+vector<vector<Point>> HandDetector::getHandContour() const {
     Mat filteredDepthMap;
     getFilteredDepthMap(filteredDepthMap);
 
@@ -113,8 +117,10 @@ vector<Point> HandDetector::getHandContour() const {
         return {};
     }
     else {
-        return std::move(*max_iter);
+        return vector<vector<Point>>(1, std::move(*max_iter));
     }
+    
+//    return filteredContours;
 }
 
 const Mat & HandDetector::getDepthDisparityImage() const {
@@ -128,7 +134,7 @@ const Mat & HandDetector::getBGRImage() const {
 vector<Point> HandDetector::getApproxPoly(const vector<Point> & contour) {
     if (contour.empty()) return {};
     vector<Point> poly;
-    approxPolyDP(contour, poly, 5, false);
+    approxPolyDP(contour, poly, 8, true);
     return poly;
 }
 
@@ -172,47 +178,148 @@ std::tuple<vector<Point>, vector<Point>> HandDetector::getFingers(const vector<P
     
     vector<Point> fingers, concaves;
     
-    vector<int> hull;
-    convexHull(poly, hull, true);
-    vector<Vec4i> hulldef;
-    convexityDefects(poly, hull, hulldef);
-
-    for (auto & item : hulldef) {
-        Point vec1 = poly[item[0]] - poly[item[2]];
-        Point vec2 = poly[item[1]] - poly[item[2]];
-        
-        int dot = vec1.dot(vec2);
-        
-        if (dot >= -0.5) {
-            if (!fingers.empty()) {
-                int deltx = fingers.back().x - poly[item[0]].x;
-                int delty = fingers.back().y - poly[item[0]].y;
-                int delt_pow = deltx * deltx - delty * delty;
-                
-                if (delt_pow > 10 * 10) {
-                    fingers.push_back(poly[item[0]]);
-                } else {
-                    fingers.back().x = (fingers.back().x + poly[item[0]].x) / 2;
-                    fingers.back().y = (fingers.back().y + poly[item[0]].y) / 2;
+//    vector<int> hull;
+//    convexHull(poly, hull, true);
+//    vector<Vec4i> hulldef;
+//    convexityDefects(poly, hull, hulldef);
+//
+//    for (auto & item : hulldef) {
+//        Point vec1 = poly[item[0]] - poly[item[2]];
+//        Point vec2 = poly[item[1]] - poly[item[2]];
+//        
+//        int dot = vec1.dot(vec2);
+//        
+//        if (dot >= -0.5) {
+//            if (!fingers.empty()) {
+//                int deltx = fingers.back().x - poly[item[0]].x;
+//                int delty = fingers.back().y - poly[item[0]].y;
+//                int delt_pow = deltx * deltx - delty * delty;
+//                
+//                if (delt_pow > 5 * 5) {
+//                    fingers.push_back(poly[item[0]]);
+//                }
+//            }
+//            if (!concaves.empty()) {
+//                int deltx = concaves.back().x - poly[item[2]].x;
+//                int delty = concaves.back().y - poly[item[2]].y;
+//                int delt_pow = deltx * deltx - delty * delty;
+//                
+//                if (delt_pow > 4 * 4) {
+//                    concaves.push_back(poly[item[2]]);
+//                }
+//            } else {
+//                concaves.push_back(poly[item[2]]);
+//            }
+//            fingers.push_back(poly[item[1]]);
+//        }
+//    }
+//    static const size_t L1 = 8;
+//    static const size_t L2 = 8;
+    static const size_t L1 = 1;
+    static const size_t L2 = 1;
+    static const long double PI = acos(-1);
+    static const long double cos_T = cos(95.0l / 180.0l * PI);
+    vector<std::tuple<Point, long double, double>> filtered_pnts;
+    for (long i = 0; i < poly.size(); ++ i) {
+        long double greatest_cos = -1;
+        double cross = 0.0;
+        for (long leftind = i - L1; leftind < i; ++ leftind) {
+            size_t j = (leftind < 0) ? (poly.size() - 1 + leftind) : leftind;
+            for (long rightind = i + 1; rightind <= i + L2; ++ rightind) {
+                size_t k = (rightind >= poly.size()) ? (rightind - poly.size()) : rightind;
+                int deltx, delty;
+                Point vec1 = poly[j] - poly[i];
+                deltx = poly[j].x - poly[i].x;
+                delty = poly[j].y - poly[i].y;
+                long double dist1 = sqrt(deltx * deltx + delty * delty);
+                Point vec2 = poly[k] - poly[i];
+                deltx = poly[k].x - poly[i].x;
+                delty = poly[k].y - poly[i].y;
+                long double dist2 = sqrt(deltx * deltx + delty * delty);
+                long double cosval = vec1.dot(vec2) / (dist1 * dist2);
+                if (greatest_cos < cosval) {
+                    greatest_cos = cosval;
+                    cross = vec1.cross(vec2);
                 }
             }
-            if (!concaves.empty()) {
-                int deltx = concaves.back().x - poly[item[2]].x;
-                int delty = concaves.back().y - poly[item[2]].y;
-                int delt_pow = deltx * deltx - delty * delty;
-                
-                if (delt_pow > 10 * 10) {
-                    concaves.push_back(poly[item[2]]);
-                } else {
-                    concaves.back() = Point((concaves.back().x + poly[item[2]].x) / 2,
-                                            (concaves.back().y + poly[item[2]].y) / 2);
-                }
-            } else {
-                concaves.push_back(poly[item[2]]);
-            }
-            fingers.push_back(poly[item[1]]);
+        }
+        
+        if (greatest_cos > cos_T || fabs(greatest_cos - cos_T) < 1e-8) {
+            filtered_pnts.push_back(std::make_tuple(poly[i], greatest_cos, cross));
         }
     }
     
+    for (const auto & tup : filtered_pnts) {
+        Point p;
+        double dot, cros;
+        std::tie(p, dot, cros) = tup;
+        
+        if (cros > 0) {
+            fingers.push_back(p);
+        } else {
+            concaves.push_back(p);
+        }
+    }
+    
+//    if (fingers.size() > 7)
+//        fingers.resize(7);
+//    if (concaves.size() > 7)
+//        concaves.resize(7);
+    
     return std::make_tuple(fingers, concaves);
+}
+
+std::tuple<vector<Point>, vector<Point>> HandDetector::getKmeanFingers(const vector<Point> & poly) {
+    static const size_t L1 = 5;
+    static const size_t L2 = 5;
+    static const long double PI = acos(-1);
+    static const long double cos_T = cos(95.0l / 180.0l * PI);
+    //vector<std::tuple<Point, long double, double>> filtered_pnts;
+    vector<Point> filtered_pnts;
+    for (long i = 0; i < poly.size(); ++ i) {
+        long double greatest_cos = -1;
+        double cross = 0.0;
+        for (long leftind = i - L1; leftind < i; ++ leftind) {
+            size_t j = (leftind < 0) ? (poly.size() - 1 + leftind) : leftind;
+            for (long rightind = i + 1; rightind <= i + L2; ++ rightind) {
+                size_t k = (rightind >= poly.size()) ? (rightind - poly.size()) : rightind;
+                int deltx, delty;
+                Point vec1 = poly[j] - poly[i];
+                deltx = poly[j].x - poly[i].x;
+                delty = poly[j].y - poly[i].y;
+                long double dist1 = sqrt(deltx * deltx + delty * delty);
+                Point vec2 = poly[k] - poly[i];
+                deltx = poly[k].x - poly[i].x;
+                delty = poly[k].y - poly[i].y;
+                long double dist2 = sqrt(deltx * deltx + delty * delty);
+                long double cosval = vec1.dot(vec2) / (dist1 * dist2);
+                if (greatest_cos < cosval) {
+                    greatest_cos = cosval;
+                    cross = vec1.cross(vec2);
+                }
+            }
+        }
+        
+        if ((greatest_cos > cos_T || fabs(greatest_cos - cos_T) < 1e-8) && cross > 0) {
+            //filtered_pnts.push_back(std::make_tuple(poly[i], greatest_cos, cross));
+            filtered_pnts.push_back(poly[i]);
+        }
+    }
+    
+    vector<Point> kmean_centers = kmeans_cluster(filtered_pnts, 10);
+    
+    Point center = getPolyCenter(kmean_centers);
+    std::sort(kmean_centers.begin(), kmean_centers.end(),
+              [&center] (const std::tuple<Point, long double, double> & a, const std::tuple<Point, long double, double> & b) {
+                  Point vec1 = std::get<0>(a) - center;
+                  Point vec2 = std::get<0>(b) - center;
+                  
+                  double atan_val1 = atan2(vec1.x, vec1.y);//(vec1.x != 0) ? atan2(vec1.y, vec1.x) : (vec1.y < 0) ? -DBL_MAX : DBL_MAX;
+                  double atan_val2 = atan2(vec2.x, vec2.y);//(vec2.x != 0) ? atan2(vec2.y, vec2.x) : (vec2.y < 0) ? -DBL_MAX : DBL_MAX;
+                  return atan_val1 < atan_val2;
+              });
+    
+    vector<Point> fingers, concaves;
+    fingers = kmean_centers;
+    return std::make_tuple(std::move(fingers), std::move(concaves));
 }

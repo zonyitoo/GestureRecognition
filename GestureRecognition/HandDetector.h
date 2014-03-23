@@ -18,7 +18,7 @@
 class HandDetector final {
 public:
     bool grab(cv::VideoCapture & capture);
-    std::vector<cv::Point> getHandContour() const;
+    std::vector<std::vector<cv::Point>> getHandContour() const;
     
     const cv::Mat & getDepthDisparityImage() const;
     const cv::Mat & getBGRImage() const;
@@ -28,6 +28,7 @@ public:
     static std::vector<cv::Point> getConcavePoints(const std::vector<cv::Point> & contour);
     static cv::Point getPolyCenter(const std::vector<cv::Point> & poly);
     static std::tuple<std::vector<cv::Point>, std::vector<cv::Point>> getFingers(const std::vector<cv::Point> & poly);
+    static std::tuple<std::vector<cv::Point>, std::vector<cv::Point>> getKmeanFingers(const std::vector<cv::Point> & contour);
 private:
     void getHSVMask(cv::Mat & hsvMask) const;
     void getFilteredDepthMap(cv::Mat & filteredDepthMap) const;

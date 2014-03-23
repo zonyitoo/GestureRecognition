@@ -26,6 +26,7 @@
 		B54F9FE718DB20170078B3EB /* libopencv_photo.2.4.8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B54F9FD718DB20170078B3EB /* libopencv_photo.2.4.8.dylib */; };
 		B54F9FE818DB20170078B3EB /* libopencv_stitching.2.4.8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B54F9FD818DB20170078B3EB /* libopencv_stitching.2.4.8.dylib */; };
 		B54F9FE918DB20170078B3EB /* libopencv_superres.2.4.8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B54F9FD918DB20170078B3EB /* libopencv_superres.2.4.8.dylib */; };
+		B5E06DCE18DC7E860069E8CF /* utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B5E06DCD18DC7E860069E8CF /* utils.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -63,6 +64,8 @@
 		B54F9FD718DB20170078B3EB /* libopencv_photo.2.4.8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopencv_photo.2.4.8.dylib; path = ../../../../usr/local/lib/libopencv_photo.2.4.8.dylib; sourceTree = "<group>"; };
 		B54F9FD818DB20170078B3EB /* libopencv_stitching.2.4.8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopencv_stitching.2.4.8.dylib; path = ../../../../usr/local/lib/libopencv_stitching.2.4.8.dylib; sourceTree = "<group>"; };
 		B54F9FD918DB20170078B3EB /* libopencv_superres.2.4.8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopencv_superres.2.4.8.dylib; path = ../../../../usr/local/lib/libopencv_superres.2.4.8.dylib; sourceTree = "<group>"; };
+		B5E06DCC18DC7DE10069E8CF /* utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
+		B5E06DCD18DC7E860069E8CF /* utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = utils.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -131,6 +134,8 @@
 				B547F5D918D996650081FFBB /* GestureRecognition.1 */,
 				B547F68518D9E2A10081FFBB /* HandDetector.cpp */,
 				B547F68618D9E2A10081FFBB /* HandDetector.h */,
+				B5E06DCC18DC7DE10069E8CF /* utils.h */,
+				B5E06DCD18DC7E860069E8CF /* utils.cpp */,
 			);
 			path = GestureRecognition;
 			sourceTree = "<group>";
@@ -186,6 +191,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B5E06DCE18DC7E860069E8CF /* utils.cpp in Sources */,
 				B547F68718D9E2A10081FFBB /* HandDetector.cpp in Sources */,
 				B547F5D818D996650081FFBB /* main.cpp in Sources */,
 			);
