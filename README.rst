@@ -39,7 +39,7 @@ Building
 ScreenShots
 ===========
 
-![ScreenShots](blob/master/screenshot.png)
+![ScreenShots](https://raw.githubusercontent.com/zonyitoo/GestureRecognition/master/screenshot.png)
 
 Thanks
 ======
