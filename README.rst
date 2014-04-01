@@ -13,7 +13,7 @@ Aims
 * Mark finger tips and palm's positions. ✔︎
 * Use K-Means algorithm to detect finger tips' positions. ✖︎
 * Use bounding polygon to detect finger tips' positions. ✔︎
-* Remove points on arm. ✔︎
+* Remove points on arm. ✖︎
 * Follow finger tips and palm's positions change.
 * Use finite-state machine to define and recognize hand gesture.
 * Improve precision of finger tips and palm's positions.
@@ -27,24 +27,19 @@ Requirements
 * OpenNI 1.x, OpenNI 2.x (Currently OpenNI 2.x only support Windows® Kinect SDK)
 * OpenCV >= 2.4.7
 * Microsoft® Kinect
-* C++ compiler with C++11 standard support
+* Python2
 
 Building
 ========
 
-* OS X: Open ``GestureRecognition.xcodeproj`` with Xcode, then press ``⌘`` + ``R``.
-* Linux/Unix
-
 .. code:: bash
 
-    $ cd GestureRecognition
-    $ g++ -std=c++11 *.h *.cpp -o gesture-recognition `pkg-config opencv --libs --cflags`
-    $ ./gesture-recognition
+    $ python main.py
 
 ScreenShots
 ===========
 
-*Will be uploaded after first BETA released*
+![ScreenShots](blob/master/screenshot.png)
 
 Thanks
 ======
