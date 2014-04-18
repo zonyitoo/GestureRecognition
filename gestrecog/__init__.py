@@ -1,8 +1,6 @@
 
 # -*- coding: utf-8 -*-
 
-from __future__ import unicode_literals
-
 __title__ = 'GestureRecognition'
 __version__ = '1.0.0'
 __author__ = 'Y. T. Chung (zonyitoo)'
