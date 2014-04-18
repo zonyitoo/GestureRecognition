@@ -29,8 +29,8 @@ Requirements
 * Microsoft® Kinect
 * Python2
 
-Building
-========
+Build, Install and Run
+======================
 
 .. code:: bash
 
