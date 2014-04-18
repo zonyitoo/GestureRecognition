@@ -33,7 +33,7 @@ setup(
     keywords='Kinect OpenCV OpenNI Gesture Recognition',
     include_package_data=True,
     install_requires=[
-        'cv2>=3.0.0',
+        # 'cv2>=3.0.0',
         'numpy>=1.8.0',
         'scipy>=0.11.0',
     ],
