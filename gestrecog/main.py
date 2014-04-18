@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
 from __future__ import unicode_literals, print_function
@@ -7,9 +7,6 @@ import cv2
 import numpy as np
 from scipy.signal import argrelextrema, argrelmax
 from scipy.ndimage import gaussian_filter, median_filter
-
-capture = cv2.VideoCapture()
-capture.open(cv2.CAP_OPENNI)
 
 
 def get_hsvmask(bgr):
@@ -59,7 +56,7 @@ def get_histogram(depth):
     peaks, indeces = argrelextrema(hist, np.greater_equal)
     #peaks = argrelmax(hist, order=winmidsize)[0]
 
-    show_histogram(hist, BIN_SIZE)
+    show_histogram(hist, BIN_SIZE, step=3)
     return hist, peaks
 
 
@@ -173,55 +170,76 @@ def analyze_palm(depthfilt):
 
     return palm_pos, fingers
 
-if __name__ == '__main__':
+
+def main():
     import timeit
+
+    palm_path = []
+    last_palm_pos = (0, 0, 0)
+
+    capture = cv2.VideoCapture()
+    capture.open(cv2.CAP_OPENNI)
 
     while capture.grab():
         start_time = timeit.default_timer()
         _, bgr = capture.retrieve(flag=cv2.CAP_OPENNI_BGR_IMAGE)
-        _, depth = capture.retrieve(flag=cv2.CAP_OPENNI_DISPARITY_MAP)
+        _, depth_orig = capture.retrieve(flag=cv2.CAP_OPENNI_DISPARITY_MAP)
         _, validMask = capture.retrieve(flag=cv2.CAP_OPENNI_VALID_DEPTH_MASK)
+        try:
+            hsvmask = get_hsvmask(bgr)
+            depth = cv2.add(depth_orig, 0, mask=hsvmask)
+            # cv2.GaussianBlur(depth, (3, 3), 0, dst=depth)
+            cv2.medianBlur(depth, 5, dst=depth)
+            # cv2.imshow("MASKED DEPTH", depth)
 
-        hsvmask = get_hsvmask(bgr)
-        depth = cv2.add(depth, 0, mask=hsvmask)
-        # cv2.GaussianBlur(depth, (3, 3), 0, dst=depth)
-        cv2.medianBlur(depth, 5, dst=depth)
-        # cv2.imshow("MASKED DEPTH", depth)
+            _, peaks = get_histogram(depth)
+            depthfilt = get_depthfilt(depth, peaks)
+            cv2.imshow("DEPTH FILT", depthfilt)
+            if depthfilt is None:
+                raise ValueError('Invalid depth')
 
-        _, peaks = get_histogram(depth)
-        depthfilt = get_depthfilt(depth, peaks)
-        cv2.imshow("DEPTH FILT", depthfilt)
-        if depthfilt is None:
-            if cv2.waitKey(300) == 27:
-                break
-            continue
+            palm_pos, fingers = analyze_palm(depthfilt)
+            # handimg = np.zeros(bgr.shape, dtype=np.dtype('float32'))
+            # cv2.circle(handimg, tuple(palm_pos), 20, (255, 255, 0, 0), 5)
+            cv2.circle(bgr, tuple(palm_pos), 20, (255, 255, 0, 0), 5)
 
-        palm_pos, fingers = analyze_palm(depthfilt)
-        handimg = np.zeros(bgr.shape, dtype=np.dtype('float32'))
-        cv2.circle(handimg, tuple(palm_pos), 20, (255, 255, 0, 0), 5)
+            finger_colors = (
+                (0, 255, 0),  # G
+                (0, 0, 255),  # R
+                (255, 0, 0),  # B
+                (255, 255, 0),  # CYAN
+                (0, 255, 255),  # YELLOW
+            )
+            for ind, fin in enumerate(fingers):
+                p1, p2 = fin
+                # cv2.line(handimg, tuple(palm_pos), tuple(p1), finger_colors[ind % len(finger_colors)], thickness=3)
+                # cv2.line(handimg, tuple(p1), tuple(p2), finger_colors[ind % len(finger_colors)], thickness=3)
+                # cv2.putText(handimg, str(ind), tuple(p2), cv2.FONT_HERSHEY_PLAIN, 3, (255, ), thickness=3)
+                cv2.line(bgr, tuple(palm_pos), tuple(p1), finger_colors[ind % len(finger_colors)], thickness=3)
+                cv2.line(bgr, tuple(p1), tuple(p2), finger_colors[ind % len(finger_colors)], thickness=3)
+                cv2.putText(bgr, str(ind), tuple(p2), cv2.FONT_HERSHEY_PLAIN, 3, (255, ), thickness=3)
+                # cv2.line(bgr, tuple(palm_pos), tuple(p2), (0, 255, 255), thickness=3)
 
-        finger_colors = (
-            (0, 255, 0),  # G
-            (0, 0, 255),  # R
-            (255, 0, 0),  # B
-            (255, 255, 0),  # CYAN
-            (0, 255, 255),  # YELLOW
-        )
-        for ind, fin in enumerate(fingers):
-            p1, p2 = fin
-            cv2.line(handimg, tuple(palm_pos), tuple(p1), finger_colors[ind % len(finger_colors)], thickness=3)
-            cv2.line(handimg, tuple(p1), tuple(p2), finger_colors[ind % len(finger_colors)], thickness=3)
-            cv2.putText(handimg, str(ind), tuple(p2), cv2.FONT_HERSHEY_PLAIN, 3, (255, ), thickness=3)
-            # cv2.line(bgr, tuple(palm_pos), tuple(p2), (0, 255, 255), thickness=3)
+            palm_pos_3d = tuple(palm_pos) + (depth_orig[palm_pos[0]][palm_pos[1]], )
+            if palm_pos_3d[2] == 0:
+                raise ValueError('Invalid palm depth')
+            fingers_3d = [(tuple(finger[0]) + (depth_orig[finger[0][0], depth_orig[0][1]], ),
+                           tuple(finger[1]) + (depth_orig[finger[1][0]][finger[1][1]], ))
+                          for finger in fingers]
 
-        # cv2.imshow("DEPTH8U", depth8u)
+            # cv2.imshow("DEPTH8U", depth8u)
+            # cv2.imshow("HAND", handimg)
+
+            stop_time = timeit.default_timer()
+
+            print('Runtime: %sms' % (stop_time - start_time, ))
+        except:
+            pass
         cv2.imshow("BGR", bgr)
-        cv2.imshow("HAND", handimg)
-
-        stop_time = timeit.default_timer()
-
-        print('Runtime: %sms' % (stop_time - start_time, ))
         if cv2.waitKey(300) == 27:
             break
 
     capture.release()
+
+if __name__ == '__main__':
+    main()

@@ -1,6 +1,6 @@
--------------------------------
-Gesture Recognition with Kinect
--------------------------------
+-----------------------------------
+Gesture Recognition based on Kinect
+-----------------------------------
 
 Just for **GRADUATION**.
 
@@ -25,7 +25,7 @@ Requirements
 
 * Unix/Linux, Microsoft Windows®
 * OpenNI 1.x, OpenNI 2.x (Currently OpenNI 2.x only support Windows® Kinect SDK)
-* OpenCV >= 2.4.7
+* OpenCV >= 3.0.0
 * Microsoft® Kinect
 * Python2
 
@@ -34,7 +34,9 @@ Building
 
 .. code:: bash
 
-    $ python main.py
+    $ ./setup.py build
+    $ ./setup.py install
+    $ gestrecog
 
 ScreenShots
 ===========
