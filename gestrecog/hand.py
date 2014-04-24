@@ -6,6 +6,16 @@ from scipy.ndimage import gaussian_filter, median_filter
 import numpy as np
 
 
+def show_histogram(hist, binsize, step=1, winname="HIST"):
+    # print peaks
+    STEP = step
+    pts = np.column_stack((np.arange(binsize * STEP, step=STEP).reshape(binsize, 1), hist))
+    histImg = np.zeros((300, binsize * STEP), dtype='uint8')
+    cv2.polylines(histImg, [pts], False, (255, 0, 0))
+    histImg = np.flipud(histImg)
+    cv2.imshow(winname, histImg)
+
+
 class HandFeatureFindingError(RuntimeError):
 
     def __init__(self, msg):
@@ -30,6 +40,7 @@ class HandFeatureFinder(object):
         for i in xrange(1, len(hist)):
             if hist[i][0] == 0 and hist[i - 1][0] <= 0:
                 hist[i][0] = hist[i - 1][0] - 1
+        show_histogram(hist, BIN_SIZE, step=3)
         #hist = median_filter(hist, (3, 3))
         peaks, indeces = argrelextrema(hist, np.greater_equal)
         #peaks = argrelmax(hist, order=winmidsize)[0]
@@ -43,6 +54,7 @@ class HandFeatureFinder(object):
         struc = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
         cv2.morphologyEx(depthmask, cv2.MORPH_OPEN, struc)
         depthfilt = cv2.add(depth, 0, mask=depthmask)
+        cv2.imshow('DEPTH FILTED', depthfilt)
         return depthfilt
 
     def analyze_palm(self, depthfilt):
@@ -81,6 +93,7 @@ class HandFeatureFinder(object):
         # cv2.imshow("DIST_F_MASK", distfmask)
 
         finger = cv2.add(depth8u, 0, mask=distfmask)
+        cv2.imshow("FINGER", finger)
         edge_struc = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (int(max_val / 3), int(max_val / 3)))
         cv2.morphologyEx(finger, cv2.MORPH_OPEN, edge_struc, dst=finger)
         # cv2.imshow("FINGER", finger)
@@ -145,13 +158,13 @@ class HandFeatureFinder(object):
 
         return palm_pos, fingers
 
-    def get_features(self, depth):
+    def get_features(self, depth, depth_orig):
         _, peaks = self.get_color_histogram(depth)
         depthfilt = self.filter_depth_by_histogram_peaks(depth, peaks)
         palm_2d, fingers_2d = self.analyze_palm(depthfilt)
 
         palm_3d = tuple(palm_2d) + (depth[palm_2d[0]][palm_2d[1]], )
-        fingers_3d = [(tuple(finger[0]) + (depth[finger[0][0], depth[0][1]], ),
-                       tuple(finger[1]) + (depth[finger[1][0]][finger[1][1]], ))
+        fingers_3d = [(tuple(finger[0]) + (depth_orig[finger[0][0]][finger[0][1]], ),
+                       tuple(finger[1]) + (depth_orig[finger[1][0]][finger[1][1]], ))
                       for finger in fingers_2d]
         return palm_3d, fingers_3d

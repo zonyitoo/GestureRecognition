@@ -30,5 +30,6 @@ class SkinDetector(object):
         cv2.morphologyEx(hsvmask, cv2.MORPH_CLOSE, struc)
 
         cv2.GaussianBlur(hsvmask, (3, 3), 0, hsvmask)
+        cv2.imshow('SKIN MASK', hsvmask)
 
         return hsvmask

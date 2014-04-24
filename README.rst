@@ -14,11 +14,11 @@ Aims
 * Use K-Means algorithm to detect finger tips' positions. ✖︎
 * Use bounding polygon to detect finger tips' positions. ✔︎
 * Remove points on arm. ✖︎
-* Follow finger tips and palm's positions change.
-* Use finite-state machine to define and recognize hand gesture.
-* Improve precision of finger tips and palm's positions.
-* Be able to follow finger tips's movement.
-* Improve performance, avaliability and usability.
+* Follow finger tips and palm's positions change.✔︎
+* Use finite-state machine to define and recognize hand gesture.✖︎
+* Improve precision of finger tips and palm's positions.✖︎
+* Be able to follow finger tips's movement.✖︎
+* Improve performance, avaliability and usability.✖︎
 
 Requirements
 ============
@@ -34,6 +34,8 @@ Build, Install and Run
 
 .. code:: bash
 
+    $ virtualenv .venv
+    $ source .venv/bin/activate
     $ ./setup.py build
     $ ./setup.py install
     $ gestrecog

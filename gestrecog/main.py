@@ -7,6 +7,7 @@ import cv2
 
 from hand import HandFeatureFinder
 from skin import SkinDetector
+from gesture import DynamicRoutineGestureDetector
 
 
 def main():
@@ -16,6 +17,9 @@ def main():
 
     skin_detector = SkinDetector()
     feature_finder = HandFeatureFinder()
+    gesture_detector = DynamicRoutineGestureDetector()
+
+    last_pos = None
 
     while capture.grab():
         start_time = timeit.default_timer()
@@ -26,12 +30,16 @@ def main():
         try:
             skin_mask = skin_detector.generate_mask_from_bgr(bgr)
             filt_depth = cv2.add(depth_orig, 0, mask=skin_mask)
-            palm_pos, fingers = feature_finder.get_features(filt_depth)
+            palm_pos, fingers = feature_finder.get_features(filt_depth, depth_orig)
 
-            print(palm_pos)
-            print(fingers)
+            # gesture_detector.add_position(palm_pos, fingers)
 
-            cv2.circle(bgr, (palm_pos[0], palm_pos[1]), 20, (255, 255, 0, 0), 5)
+            if last_pos is not None:
+                direct = gesture_detector.get_move(last_pos, palm_pos)
+                print('MOVE DIRECT %s' % direct)
+            last_pos = palm_pos
+
+            cv2.circle(depth_orig, (palm_pos[0], palm_pos[1]), 20, (255, 255, 0, 0), 5)
 
             finger_colors = (
                 (0, 255, 0),  # G
@@ -44,20 +52,21 @@ def main():
             for ind, finger in enumerate(fingers):
                 p1, p2 = finger
 
-                cv2.line(bgr, (palm_pos[0], palm_pos[1]), (p1[0], p1[1]),
+                cv2.line(depth_orig, (palm_pos[0], palm_pos[1]), (p1[0], p1[1]),
                          finger_colors[ind % len(finger_colors)], thickness=3)
-                cv2.line(bgr, (p1[0], p1[1]), (p2[0], p2[1]),
+                cv2.line(depth_orig, (p1[0], p1[1]), (p2[0], p2[1]),
                          finger_colors[ind % len(finger_colors)], thickness=3)
-                cv2.putText(bgr, str(ind), (p2[0], p2[1]), cv2.FONT_HERSHEY_PLAIN, 3, (255, ), thickness=3)
+                cv2.putText(depth_orig, str(ind), (p2[0], p2[1]), cv2.FONT_HERSHEY_PLAIN, 3, (255, ), thickness=3)
 
             stop_time = timeit.default_timer()
             print('Runtime: %fms' % (stop_time - start_time))
-
-            cv2.imshow("BGR", bgr)
         except Exception as e:
             print(e)
 
-        if cv2.waitKey(300) == 27:
+        cv2.imshow("BGR", bgr)
+        cv2.imshow("DEPTH", depth_orig)
+
+        if cv2.waitKey(330) == 27:
             break
 
     capture.release()
